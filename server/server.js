@@ -25,6 +25,38 @@ app.get('/posts', async (req, res) => {
   );
 });
 
+app.get('/posts/:id', async (req, res) => {
+  const { id } = req.params;
+  return await commitToDb(
+    prisma.post.findUnique({
+      where: {
+        id: id,
+      },
+      select: {
+        body: true,
+        title: true,
+        comments: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          select: {
+            id: true,
+            message: true,
+            parentId: true,
+            createdAt: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    })
+  );
+});
+
 async function commitToDb(promise) {
   const [error, data] = await app.to(promise);
   if (error) {
