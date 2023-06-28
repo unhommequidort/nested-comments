@@ -1,5 +1,5 @@
 import './App.css';
-import Post from './components/Post';
+import { Post } from './components/Post';
 import { PostList } from './components/PostList';
 import { Routes, Route } from 'react-router-dom';
 import PostProvider from './contexts/PostContext';

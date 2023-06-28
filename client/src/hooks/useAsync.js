@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export const useAsync = (func, dependencies = []) => {
+export function useAsync(func, dependencies = []) {
   const { execute, ...state } = useAsyncInternal(func, dependencies, true);
 
   useEffect(() => {
@@ -8,13 +8,13 @@ export const useAsync = (func, dependencies = []) => {
   }, [execute]);
 
   return state;
-};
+}
 
-export const useAsyncFn = (func, dependencies = []) => {
+export function useAsyncFn(func, dependencies = []) {
   return useAsyncInternal(func, dependencies, false);
-};
+}
 
-const useAsyncInternal = (func, dependencies, initialLoading = false) => {
+function useAsyncInternal(func, dependencies, initialLoading = false) {
   const [loading, setLoading] = useState(initialLoading);
   const [error, setError] = useState();
   const [value, setValue] = useState();
@@ -28,8 +28,8 @@ const useAsyncInternal = (func, dependencies, initialLoading = false) => {
         return data;
       })
       .catch((error) => {
-        setValue(undefined);
         setError(error);
+        setValue(undefined);
         return Promise.reject(error);
       })
       .finally(() => {
@@ -39,4 +39,4 @@ const useAsyncInternal = (func, dependencies, initialLoading = false) => {
   }, dependencies);
 
   return { loading, error, value, execute };
-};
+}
