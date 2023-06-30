@@ -5,15 +5,30 @@ import { usePost } from '../contexts/PostContext';
 import CommentList from './CommentList';
 import IconButton from './IconButton';
 import { FaEdit, FaHeart, FaReply, FaTrash } from 'react-icons/fa';
+import { CommentForm } from './CommentForm';
+import { useAsyncFn } from '../hooks/useAsync';
+import { createComment } from '../services/comments';
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
 const Comment = ({ id, message, user, createdAt }) => {
-  const { getReplies } = usePost();
+  const { post, getReplies, createLocalComment } = usePost();
   const childComments = getReplies(id);
   const [areChildrenHidden, setAreChildrenHidden] = useState(false);
+  const [isReplying, setIsReplying] = useState(false);
+  const createCommentFn = useAsyncFn(createComment);
+
+  function onCommentReply(message) {
+    return createCommentFn
+      .execute({ postId: post.id, message, parentId: id })
+      .then((comment) => {
+        setIsReplying(false);
+        createLocalComment(comment);
+      });
+  }
+
   return (
     <>
       <div className="comment">
@@ -28,11 +43,26 @@ const Comment = ({ id, message, user, createdAt }) => {
           <IconButton Icon={FaHeart} aria-label={'Like'}>
             2
           </IconButton>
-          <IconButton Icon={FaReply} aria-label={'Reply'} />
+          <IconButton
+            isActive={isReplying}
+            onClick={() => setIsReplying((prev) => !prev)}
+            Icon={FaReply}
+            aria-label={isReplying ? 'Cancel reply' : 'Reply'}
+          />
           <IconButton Icon={FaEdit} aria-label={'Edit'} />
           <IconButton Icon={FaTrash} aria-label={'Delete'} color="danger" />
         </div>
       </div>
+      {isReplying && (
+        <div className="mt-1 ml-3">
+          <CommentForm
+            autoFocus
+            onSubmit={onCommentReply}
+            loading={createCommentFn.loading}
+            error={createCommentFn.error}
+          />
+        </div>
+      )}
       {childComments?.length > 0 && (
         <>
           <div
