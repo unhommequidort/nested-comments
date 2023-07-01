@@ -49,7 +49,6 @@ const Comment = ({ id, message, user, createdAt }) => {
       .execute({ postId: post.id, message, id })
       .then((comment) => {
         setIsEditing(false);
-        console.log(comment);
         updateLocalComment(id, comment.message);
       });
   }
