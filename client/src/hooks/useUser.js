@@ -1,5 +1,7 @@
+import Cookies from 'js-cookie';
+
 function useUser() {
-  return { id: document.cookie.match(/userId=(?<id>[^;]+);?$/)?.groups.id };
+  return { id: Cookies.get('userId') };
 }
 
 export default useUser;
