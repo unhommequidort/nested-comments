@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { usePost } from '../contexts/PostContext';
 import CommentList from './CommentList';
 import IconButton from './IconButton';
-import { FaEdit, FaHeart, FaReply, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaHeart, FaRegHeart, FaReply, FaTrash } from 'react-icons/fa';
 import { CommentForm } from './CommentForm';
 import { useAsyncFn } from '../hooks/useAsync';
 import {
   createComment,
   deleteComment,
   updateComment,
+  toggleCommentLike,
 } from '../services/comments';
 import useUser from '../hooks/useUser';
 
@@ -18,13 +19,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
-const Comment = ({ id, message, user, createdAt }) => {
+const Comment = ({ id, message, user, createdAt, likeCount, likedByMe }) => {
   const {
     post,
     getReplies,
     createLocalComment,
     updateLocalComment,
     deleteLocalComment,
+    toggleLocalCommentLike,
   } = usePost();
   const childComments = getReplies(id);
   const [areChildrenHidden, setAreChildrenHidden] = useState(false);
@@ -33,6 +35,7 @@ const Comment = ({ id, message, user, createdAt }) => {
   const createCommentFn = useAsyncFn(createComment);
   const updateCommentFn = useAsyncFn(updateComment);
   const deleteCommentFn = useAsyncFn(deleteComment);
+  const toggleCommentLikeFn = useAsyncFn(toggleCommentLike);
   const currentUser = useUser();
 
   function onCommentReply(message) {
@@ -59,6 +62,12 @@ const Comment = ({ id, message, user, createdAt }) => {
       .then((comment) => deleteLocalComment(comment.id));
   }
 
+  function onToggleCommentLike() {
+    return toggleCommentLikeFn
+      .execute({ id, postId: post.id })
+      .then(({ addLike }) => toggleLocalCommentLike(id, addLike));
+  }
+
   return (
     <>
       <div className="comment">
@@ -81,8 +90,13 @@ const Comment = ({ id, message, user, createdAt }) => {
         )}
 
         <div className="footer">
-          <IconButton Icon={FaHeart} aria-label={'Like'}>
-            2
+          <IconButton
+            onClick={onToggleCommentLike}
+            disabled={toggleCommentLikeFn.loading}
+            Icon={likedByMe ? FaHeart : FaRegHeart}
+            aria-label={likedByMe ? 'Unlike' : 'Like'}
+          >
+            {likeCount}
           </IconButton>
           <IconButton
             isActive={isReplying}
